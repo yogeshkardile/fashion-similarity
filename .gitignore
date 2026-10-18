@@ -6,8 +6,8 @@ __pycache__/
 !.env.example
 
 cache/
-artifacts/fashion_resnet50.faiss
 artifacts/embedding_chunks/
+artifacts/fashion_mapping.npz
 
 .DS_Store
 .idea/
