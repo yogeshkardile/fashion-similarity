@@ -22,20 +22,31 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+
+import os
+from fastapi.middleware.cors import CORSMiddleware
+
+frontend_origins = [
+    "http://localhost:63342",
+    "http://127.0.0.1:63342",
+    "http://localhost:5500",
+    "http://127.0.0.1:5500",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
+production_url = os.getenv("FRONTEND_URL")
+if production_url:
+    frontend_origins.append(production_url.rstrip("/"))
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:63342",
-        "http://127.0.0.1:63342",
-        "http://localhost:5500",
-        "http://127.0.0.1:5500",
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-    ],
+    allow_origins=frontend_origins,
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 @app.get("/")
 def home():
