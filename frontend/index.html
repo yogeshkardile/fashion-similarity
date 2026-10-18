@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fashion Finder</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="header">
+        <a href="#" class="logo">Fashion<span>Finder</span></a>
+        <p>Visual similarity search</p>
+    </header>
+
+    <main class="container">
+        <section class="intro">
+            <h1>Find similar styles.</h1>
+            <p>Upload a fashion image to discover visually similar items. You can also drag a photo in or paste one with Ctrl+V.</p>
+        </section>
+
+        <section class="upload-section">
+            <div class="backend-bar" id="backendBar" data-state="checking">
+                <span class="dot" aria-hidden="true"></span>
+                <span id="backendText" role="status" aria-live="polite">Checking backend...</span>
+                <button type="button" id="wakeButton" hidden>Wake backend</button>
+            </div>
+
+            <label for="imageInput">Your image</label>
+
+            <div class="upload-box" id="uploadBox" tabindex="0" role="button" aria-label="Choose an image">
+                <input type="file" id="imageInput" accept="image/*" hidden>
+                <img id="preview" alt="Selected image preview" hidden>
+
+                <div id="uploadMessage">
+                    <svg class="upload-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V5m0 0-4 4m4-4 4 4M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"/></svg>
+                    <p class="upload-title">Drop an image here, or browse</p>
+                    <p class="upload-hint">JPG, PNG or WEBP, up to 10 MB</p>
+                    <button type="button" id="chooseButton">Browse files</button>
+                </div>
+
+                <div id="previewActions" class="preview-actions" hidden>
+                    <span id="fileName"></span>
+                    <button type="button" id="changeButton">Change</button>
+                    <button type="button" id="removeButton">Remove</button>
+                </div>
+            </div>
+
+            <div class="controls">
+                <label for="topK">Number of results</label>
+                <select id="topK">
+                    <option value="5">5 images</option>
+                    <option value="10" selected>10 images</option>
+                    <option value="20">20 images</option>
+                    <option value="50">50 images</option>
+                </select>
+            </div>
+
+            <button id="searchButton" class="search-button" disabled>
+                <span class="spinner" aria-hidden="true"></span>
+                <span id="searchLabel">Find similar images</span>
+            </button>
+
+            <p id="status" role="status" aria-live="polite"></p>
+        </section>
+
+        <section class="results-section" id="resultsSection">
+            <div class="results-header">
+                <h2>Similar images</h2>
+                <span id="resultCount"></span>
+            </div>
+
+            <div id="results" class="results-grid">
+                <p class="empty-message">Your matching images will appear here.</p>
+            </div>
+        </section>
+    </main>
+
+    <dialog id="lightbox" class="lightbox" aria-label="Image viewer">
+        <button type="button" class="lb-close" id="lbClose" aria-label="Close">&times;</button>
+        <button type="button" class="lb-nav lb-prev" id="lbPrev" aria-label="Previous image">&#8249;</button>
+        <figure>
+            <img id="lbImage" alt="">
+            <figcaption id="lbCaption"></figcaption>
+        </figure>
+        <button type="button" class="lb-nav lb-next" id="lbNext" aria-label="Next image">&#8250;</button>
+    </dialog>
+
+    <footer>Fashion Finder &middot; Image similarity search</footer>
+
+    <script src="config.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+*.py[cod]
+.env
+.env.*
+!.env.example
+
+cache/
+artifacts/fashion_resnet50.faiss
+artifacts/embedding_chunks/
+
+.DS_Store
+.idea/
+.vscode/
