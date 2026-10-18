@@ -16,38 +16,30 @@ The project uses a pretrained ResNet-50 model to create image embeddings and a F
 
 ## Architecture
 
-```mermaid
-flowchart TD
-    A[User selects an image] --> B[Frontend: HTML, CSS, JavaScript]
-    B -->|POST /search| C[FastAPI backend]
-    C --> D[Image validation with Pillow]
-    D --> E[ResNet-50 ImageEncoder]
-    E -->|2048-dimensional embedding| F[FAISS similarity search]
-    F --> G[FAISS index + image mapping]
-    G --> H[Top-K image IDs and similarity scores]
-    H --> B
-    B -->|GET /images/{image_id}| I[FastAPI image endpoint]
-    I --> J{Image in local cache?}
-    J -->|Yes| K[Return cached image]
-    J -->|No| L[Resolve Google Drive file ID]
-    L --> M[Fetch image from Google Drive]
-    M --> N[Save image in cache/images]
-    N --> K
-    K --> B
-```
+FashionFinder uses a frontend, a FastAPI backend, a ResNet50 feature extractor, and a FAISS index to find visually similar fashion images.
 
-### Search flow
+| Component | Responsibility |
+|---|---|
+| Frontend (HTML, CSS, JavaScript) | Upload an image and display similar results |
+| FastAPI backend | Handle search requests and serve images |
+| Pillow | Validate and process uploaded images |
+| ResNet50 | Extract 2048-dimensional image embeddings |
+| FAISS | Search for visually similar images |
+| Image mapping | Map FAISS results to image IDs and Google Drive file IDs |
+| Image service | Fetch images from Google Drive on demand |
+| Local image cache | Store fetched images for subsequent requests |
 
-1. The user uploads a query image in the browser.
-2. `script.js` sends it to `POST /search`.
-3. FastAPI validates the file and passes it to the ResNet-50 encoder.
-4. The encoder generates a normalized image embedding.
-5. FAISS compares the embedding against the precomputed image vectors and returns the nearest results.
-6. The backend maps each result to its image ID, Drive file ID, path, and similarity score.
-7. The browser requests each result image from `GET /images/{image_id}`.
-8. The image service serves a cached copy when available or fetches it from Google Drive and caches it.
+### Search Flow
 
-> **Important:** The FAISS index and embeddings are precomputed artifacts. Running a search does not rebuild them.
+1. The user uploads an image through the frontend.
+2. FastAPI receives the image and validates it.
+3. ResNet50 extracts its feature embedding.
+4. FAISS searches the existing index for similar images.
+5. The backend returns the top matching image IDs and similarity scores.
+6. The frontend requests the matching images from the image endpoint.
+7. The image service returns cached images or fetches uncached images from Google Drive and caches them.
+
+**Note:** Cached images can be reused locally. Images that have not been cached require an internet connection to fetch.
 
 ## Project structure
 
