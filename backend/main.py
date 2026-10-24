@@ -3,7 +3,7 @@ from io import BytesIO
 
 from fastapi import FastAPI, File, HTTPException, Query, UploadFile
 from PIL import Image, UnidentifiedImageError
-
+import os
 from backend.model import ImageEncoder
 from backend.search import ImageSearch
 from fastapi.middleware.cors import CORSMiddleware
@@ -22,10 +22,6 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-
-import os
-from fastapi.middleware.cors import CORSMiddleware
-
 frontend_origins = [
     "http://localhost:63342",
     "http://127.0.0.1:63342",
@@ -34,7 +30,6 @@ frontend_origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
 ]
-
 production_url = os.getenv("FRONTEND_URL")
 if production_url:
     frontend_origins.append(production_url.rstrip("/"))
@@ -92,5 +87,5 @@ async def search_engine(
     }
 
 @app.get("/images/{image_id}")
-def get_image(image_id: int):
+def get_image(image_id: str):
     return serve_image(image_id, app.state.search)

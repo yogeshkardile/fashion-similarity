@@ -1,52 +1,66 @@
-
-import numpy as np
 import faiss
-
-from backend.config import INDEX_PATH, MAPPING_PATH
+import numpy as np
 
 
 class ImageSearch:
-    def __init__(self):
-        self.index = faiss.read_index(str(INDEX_PATH))
 
-        with np.load(MAPPING_PATH, allow_pickle=False) as data:
-            self.image_ids = data["image_ids"]
-            self.drive_file_ids = data["drive_file_ids"]
-            self.image_paths = data["image_paths"]
+  def __init__(
+      self,
+      index_path: str = "artifacts/fashion_resnet50.faiss",
+      mapping_path: str = "artifacts/fashion_mapping_drive.npz",
+  ):
+    self.index = faiss.read_index(index_path)
+    mapping = np.load(mapping_path, allow_pickle=True)
 
-        if not (
-            len(self.image_ids)
-            == len(self.drive_file_ids)
-            == len(self.image_paths)
-            == self.index.ntotal
-        ):
-            raise ValueError(
-                "Mapping size does not match the FAISS index."
-            )
+    self.image_ids = mapping["image_ids"]
+    self.drive_file_ids = mapping["drive_file_ids"]
 
-        self.id_to_position = {
-            int(image_id): position
-            for position, image_id in enumerate(self.image_ids)
-        }
+    self.id_to_position = {}
+    for pos, raw_id in enumerate(self.image_ids):
+      clean_id = (
+          raw_id.decode("utf-8")
+          if isinstance(raw_id, bytes)
+          else (raw_id.item() if hasattr(raw_id, "item") else raw_id)
+      )
+      try:
+        self.id_to_position[int(clean_id)] = pos
+      except (ValueError, TypeError):
+        pass
+      self.id_to_position[str(clean_id)] = pos
+      self.id_to_position[pos] = pos
 
-    def search(self, query_embedding, top_k=10):
-        query_embedding = np.asarray(
-            query_embedding, dtype=np.float32
-        ).reshape(1, -1)
+  def search(self, embedding_vector: np.ndarray, top_k: int = 10):
+    query_vec = np.ascontiguousarray(
+        embedding_vector.reshape(1, -1), dtype=np.float32
+    )
+    distances, indices = self.index.search(query_vec, top_k)
 
-        scores, indices = self.index.search(query_embedding, top_k)
+    results = []
+    for distance, idx in zip(distances[0], indices[0]):
+      if idx != -1 and idx < len(self.image_ids):
+        raw_id = self.image_ids[idx]
+        img_id = (
+            raw_id.decode("utf-8")
+            if isinstance(raw_id, bytes)
+            else (raw_id.item() if hasattr(raw_id, "item") else raw_id)
+        )
+        try:
+          img_id = int(img_id)
+        except (ValueError, TypeError):
+          pass
 
-        results = []
+        # Calculate a 0-100% similarity score based on distance
+        # For L2 distance: lower distance = higher similarity
+        dist_val = float(distance)
+        similarity_pct = max(0, min(100, int((1 - dist_val / 2.0) * 100)))
 
-        for score, position in zip(scores[0], indices[0]):
-            if position < 0:
-                continue
+        results.append({
+            "id": img_id,
+            "image_id": img_id,
+            "score": dist_val,
+            "distance": dist_val,
+            "similarity": similarity_pct,
+            "match": f"{similarity_pct}% match",
+        })
 
-            results.append({
-                "image_id": int(self.image_ids[position]),
-                "image_path": str(self.image_paths[position]),
-                "drive_file_id": str(self.drive_file_ids[position]),
-                "similarity": float(score),
-            })
-
-        return results
+    return results
